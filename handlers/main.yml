@@ -1,7 +1,31 @@
 ---
 # handlers file for ansible-role-tripleo-heat-stack
-- name: show stack
+- name: delete stack
+  register: stack_delete_output
+  os_stack:
+    stack_name: "{{ stack_name }}"
+    state: delete
+    login_username: "{{ os_username }}"
+    login_password: "{{ os_password }}"
+    auth_url: "{{ os_auth_url }}"
+    tenant_name: "{{ tenant_name }}"
 
-- name: get nested deployment
+- name: debug heat stack on failure
+  register: stack_debug_output
+  os_stack:
+    stack_name: "{{ stack_name }}"
+    state: debug
+    login_username: "{{ os_username }}"
+    login_password: "{{ os_password }}"
+    auth_url: "{{ os_auth_url }}"
+    tenant_name: "{{ tenant_name }}"
 
-- name: show latest resource failure
+- name: stack show
+  register: stack_debug_output
+  os_stack:
+    stack_name: "{{ stack_name }}"
+    state: show
+    login_username: "{{ os_username }}"
+    login_password: "{{ os_password }}"
+    auth_url: "{{ os_auth_url }}"
+    tenant_name: "{{ tenant_name }}"

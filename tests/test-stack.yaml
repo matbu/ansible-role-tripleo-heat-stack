@@ -1,0 +1,17 @@
+---
+- name: create stack
+  ignore_errors: True
+  register: stack_create
+  heat_stack:
+    stack_name: "{{ stack_name }}"
+    state: create
+    login_username: "{{ os_username }}"
+    login_password: "{{ os_password }}"
+    auth_url: "{{ os_auth_url }}"
+    tenant_name: "{{ tenant_name }}"
+    template: "/home/stack/ovb/templates/quintupleo.yaml"
+    environment_files: ['/home/stack/ovb/templates/resource-registry.yaml','/home/stack/ovb/templates/env.yaml']
+
+- name: handle debug when failure
+  notify: debug heat stack on failure
+  when: stack_create.rc != 0

@@ -13,7 +13,7 @@ except ImportError:
 DOCUMENTATION = '''
 ---
 module: os_stack
-   - Create, update, list, delete and debug failure on heat stack deployment
+   - Create, update, list, show, delete and debug failure on heat stack deployment
 options:
    login_username:
      description:
@@ -43,7 +43,7 @@ options:
    state:
      description:
         - Indicate desired state of the resource
-     choices: ['create', 'update', 'list', 'delete', 'debug']
+     choices: ['create', 'update', 'list', 'show', 'delete', 'debug']
      default: present
    stack_name:
      description:
@@ -163,14 +163,12 @@ class Stack(object):
                 return False
 
 def main():
-
-
     argument_spec = openstack_argument_spec()
     argument_spec.update(dict(
             stack_name              = dict(required=True),
             template                = dict(default=None),
             environment_files       = dict(default=None, type='list'),
-            state                   = dict(default='create', choices=['create', 'update', 'delete', 'list', 'debug']),
+            state                   = dict(default='create', choices=['create', 'update', 'delete', 'list', 'show', 'debug']),
             tenant_name             = dict(default=None),
             timeout                 = dict(default=180),
     ))

@@ -1,2 +1,10 @@
 ---
-# defaults file for ansible-role-tripleo-heat-stack
+# credentials:
+os_username: admin
+os_password: admin
+os_auth_url: http://192.168.1.14:5000/v2.0
+os_tenant_name: admin
+
+# stack info
+stack_name: stack
+timeout: 180
