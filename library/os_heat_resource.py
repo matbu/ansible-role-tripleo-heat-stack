@@ -4,16 +4,15 @@
 try:
     import time
     from keystoneclient.v2_0 import client as ksclient
-    from heatclient.client import Client as hclient
+    from heatclient.client import Client
     from heatclient.common import template_utils
     from heatclient.common import utils
-    from heatclient import exc
 except ImportError:
     print("failed=True msg='heatclient and keystoneclient is required'")
 
 DOCUMENTATION = '''
 ---
-module: os_stack
+module: os_heat_resource
    - Create, update, list, show, delete and debug failure on heat stack deployment
 options:
    login_username:
@@ -110,7 +109,7 @@ class Stack(object):
         kwargs = {
                 'token': token,
         }
-        return hclient('1', endpoint=endpoint, token=token)
+        return Client('1', endpoint=endpoint, token=token)
 
     def create(self, name,
                 template_file,
@@ -151,10 +150,6 @@ class Stack(object):
         self.client.stacks.delete(name)
         return self.list()
 
-    def get(self, name):
-        """ show stack """
-        return self.client.stacks.get(name)
-
     def get_id(self, name):
         """ get stack id by name """
         stacks = self.client.stacks.list()
@@ -166,53 +161,6 @@ class Stack(object):
             except StopIteration:
                 break
                 return False
-
-class Resource(object):
-
-    def __init__(self, kwargs):
-        self.client = self._get_client(kwargs)
-
-    def _get_client(self, kwargs, endpoint_type='publicURL'):
-        """ get heat client """
-        kclient = ksclient.Client(**kwargs)
-        token = kclient.auth_token
-        endpoint = kclient.service_catalog.url_for(service_type='orchestration',
-                                                    endpoint_type=endpoint_type)
-        kwargs = {
-                'token': token,
-        }
-        return hclient('1', endpoint=endpoint, token=token)
-
-    def list(self, name):
-        return [ res for res in self.client.resources.list(stack_id=name) ]
-
-    def get(self, name, status='CREATE_COMPLETE', nested_depth=0):
-        return [ res for res in self.client.resources.list(stack_id=name, nested_depth=nested_depth) if status in res.resource_status ]
-
-    def get_software_deployment_by_id(self, id):
-        try:
-            deployment = self.client.software_deployments.get(id)
-            return [(deployment.server_id, deployment.output_values['deploy_stderr'], deployment.status_reason)]
-        except exc.HTTPNotFound:
-            pass
-
-    def get_software_deployment_by_status(self, status='FAILED'):
-        return [ res for res in self.client.software_deployments.list() if status in res.resource_status ]
-
-    def debug_deployment(self, name):
-        # get failed resource
-        failed_resource = self.get(name=name, status='FAILED', nested_depth=5)
-        # get software_deployment
-        failure = []
-        for res in failed_resource:
-            failure.append(self.get_software_deployment_by_id(res.physical_resource_id))
-        return failure
-
-    def debug_stack(self, name):
-        # return all failed resources
-        failed_resource = self.get(name=name, status='FAILED', nested_depth=5)
-        return [ (res.resource_name, res.resource_status_reason, res.resource_type) for res in failed_resource ]
-
 
 def main():
     argument_spec = openstack_argument_spec()
@@ -249,8 +197,6 @@ def main():
             module.exit_json(changed = True, result = "created" , stack = stack)
         else:
             module.exit_json(changed = False, result = "success" , id = stack_id)
-    elif module.params['state'] == 'update':
-            module.exit_json(changed = False, result = "Not implemented yet")
     elif module.params['state'] == 'delete':
         stack_id = stack.get_id(stack_name)
         if not stack_id:
@@ -261,14 +207,8 @@ def main():
     elif module.params['state'] == 'list':
         stack_list = stack.list()
         module.exit_json(changed = True, result = "list" , stack_list = stack_list)
-    elif module.params['state'] == 'show':
-        stack_show = stack.get(stack_name)
-        module.exit_json(changed = True, result = "show" , stack_show = stack_show)
-    elif module.params['state'] == 'debug':
-            resource = Resource(kwargs)
-            failed_resource = resource.debug_stack(stack_name)
-            failed_deployment = resource.debug_deployment(stack_name)
-            module.exit_json(changed = True, result = "debug" , failed_resource = failed_resource, failed_deployment = failed_deployment)
+    else:
+            module.exit_json(changed = False, result = "Not implemented yet")
 
 from ansible.module_utils.basic import *
 from ansible.module_utils.openstack import *
