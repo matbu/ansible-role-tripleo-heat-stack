@@ -268,10 +268,10 @@ def main():
         stack_show = stack.get(stack_name)
         module.exit_json(changed = True, result = "show" , stack_show = stack_show)
     elif module.params['state'] == 'debug':
-            resource = Resource(kwargs)
-            failed_resource = resource.debug_stack(stack_name)
-            failed_deployment = resource.debug_deployment(stack_name)
-            module.exit_json(changed = True, result = "debug" , failed_resource = failed_resource, failed_deployment = failed_deployment)
+        resource = Resource(kwargs)
+        failed_resource = resource.debug_stack(stack_name)
+        failed_deployment = resource.debug_deployment(stack_name)
+        module.exit_json(changed = True, result = "debug" , failed_resource = failed_resource, failed_deployment = failed_deployment)
 
 from ansible.module_utils.basic import *
 from ansible.module_utils.openstack import *
