@@ -82,12 +82,15 @@ class Resource(object):
         return hclient('1', endpoint=endpoint, token=token)
 
     def list(self, name):
+        """ list resource by name """
         return [ res for res in self.client.resources.list(stack_id=name) ]
 
     def get(self, name, status='CREATE_COMPLETE', nested_depth=0):
+        """ get resource by name and status """
         return [ res for res in self.client.resources.list(stack_id=name, nested_depth=nested_depth) if status in res.resource_status ]
 
     def get_software_deployment_by_id(self, id):
+        """ get software deployment by id """
         try:
             deployment = self.client.software_deployments.get(id)
             return [(deployment.server_id, deployment.output_values['deploy_stderr'], deployment.status_reason)]
@@ -95,19 +98,25 @@ class Resource(object):
             pass
 
     def get_software_deployment_by_status(self, status='FAILED'):
+        """ get software deployment by status """
         return [ res for res in self.client.software_deployments.list() if status in res.resource_status ]
 
     def debug_deployment(self, name):
-        # get failed resource
+        """
+            debug deployment by name:
+            return a list of failing deployment
+        """
         failed_resource = self.get(name=name, status='FAILED', nested_depth=5)
-        # get software_deployment
         failure = []
         for res in failed_resource:
             failure.append(self.get_software_deployment_by_id(res.physical_resource_id))
         return failure
 
     def debug_stack(self, name):
-        # return all failed resources
+        """
+            debug stack by name:
+            return a list of failing resource
+        """
         failed_resource = self.get(name=name, status='FAILED', nested_depth=5)
         return [ (res.resource_name, res.resource_status_reason, res.resource_type) for res in failed_resource ]
 
