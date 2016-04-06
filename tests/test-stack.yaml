@@ -2,16 +2,16 @@
 - name: create stack
   ignore_errors: True
   register: stack_create
-  heat_stack:
+  os_stack:
     stack_name: "{{ stack_name }}"
     state: create
     login_username: "{{ os_username }}"
     login_password: "{{ os_password }}"
     auth_url: "{{ os_auth_url }}"
-    tenant_name: "{{ tenant_name }}"
-    template: "/home/stack/ovb/templates/quintupleo.yaml"
-    environment_files: ['/home/stack/ovb/templates/resource-registry.yaml','/home/stack/ovb/templates/env.yaml']
+    tenant_name: "{{ os_tenant_name }}"
+    template: "/home/mbu/ovb/templates/quintupleo.yaml"
+    environment_files: ['/home/mbu/ovb/templates/resource-registry.yaml','/home/mbu/ovb/templates/xxxxenv.yaml']
 
-- name: handle debug when failure
+- debug: msg="handle debug when failure"
+  changed_when: stack_create.result == 'failed'
   notify: debug heat stack on failure
-  when: stack_create.rc != 0

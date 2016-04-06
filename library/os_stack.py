@@ -121,21 +121,24 @@ class Stack(object):
         tpl_files, template = template_utils.get_template_contents(template_file)
         env_files, env = template_utils.process_multiple_environments_and_files(env_paths=env_file)
 
-        stack = self.client.stacks.create(stack_name=name,
-                                   template=template,
-                                   environment=env,
-                                   files=dict(list(tpl_files.items()) + list(env_files.items())),
-                                   parameters={})
-        uid = stack['stack']['id']
+        try:
+            stack = self.client.stacks.create(stack_name=name,
+                                       template=template,
+                                       environment=env,
+                                       files=dict(list(tpl_files.items()) + list(env_files.items())),
+                                       parameters={})
+            uid = stack['stack']['id']
 
-        stack = self.client.stacks.get(stack_id=uid).to_dict()
-        while stack['stack_status'] == 'CREATE_IN_PROGRESS':
             stack = self.client.stacks.get(stack_id=uid).to_dict()
-            time.sleep(5)
-        if stack['stack_status'] == 'CREATE_COMPLETE':
-            return stack
-        else:
-            return False
+            while stack['stack_status'] == 'CREATE_IN_PROGRESS':
+                stack = self.client.stacks.get(stack_id=uid).to_dict()
+                time.sleep(5)
+            if stack['stack_status'] == 'CREATE_COMPLETE':
+                return stack
+            else:
+                return (False)
+        except exc.HTTPBadRequest as e:
+            return (False, e)
 
     def list(self):
         """ list created stacks """
@@ -244,8 +247,8 @@ def main():
             stack = stack.create(name=stack_name,
                                         template_file=template,
                                         env_file=environment_files)
-            if not stack:
-                module.fail_json(msg="Failed to create stack")
+            if not stack[0]:
+                module.fail_json(msg="Failed to create stack", result = "failed")
             module.exit_json(changed = True, result = "created" , stack = stack)
         else:
             module.exit_json(changed = False, result = "success" , id = stack_id)
